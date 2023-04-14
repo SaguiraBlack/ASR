@@ -138,11 +138,16 @@ def generarReporte():
     pdf.cell(200, 10, txt="INFORMACIÓN DE INTERFACES", ln=9, align="L")
     pdf.set_font("Arial", size = 12)
     pdf.cell(200, 10, txt="Numero de interfaces: " + numeroInterfaces, ln=9, align="L")
-    for i in range(int(numeroInterfaces)):
-        descripcionInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.2.{i+1}")
-        estadoInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.7.{i+1}")
-        pdf.cell(200, 10, txt=f"Descripcion interfaz: {descripcionInterfaz} | Estado interfaz: {estadosInterfaz[int(estadoInterfaz)-1]}", ln=9, align="L")
-
+    if numeroInterfaces > 5:
+        for i in range(int(numeroInterfaces)):
+            descripcionInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.2.{i+1}")
+            estadoInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.7.{i+1}")
+            pdf.cell(200, 10, txt=f"Descripcion interfaz: {descripcionInterfaz} | Estado interfaz: {estadosInterfaz[int(estadoInterfaz)-1]}", ln=9, align="L")
+    else:
+        for i in range(5):
+            descripcionInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.2.{i+1}")
+            estadoInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.7.{i+1}")
+            pdf.cell(200, 10, txt=f"Descripcion interfaz: {descripcionInterfaz} | Estado interfaz: {estadosInterfaz[int(estadoInterfaz)-1]}", ln=9, align="L")
     pdf.output("reporte.pdf")
 
 def consultaSNMP(comunidad,host,oid,position=2):
