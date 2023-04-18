@@ -4,22 +4,34 @@
 # imports
 from pysnmp.hlapi import *
 from fpdf import FPDF
+import time
+import os
+from graphRRD import grafica
 
 # Estados de la interfaz
 estadosInterfaz = ['Activo', 'Inactivo', 'Prueba', 'Desconocido', 'Dormido', 'NoPresente', 'CapaInferiorInactiva']
-
+datos = [
+    ["ifInMulticastPkts", "ifIn.png", "Paquetes multicast de entrada"],
+    ["ipInReceives", "ipIn.png", "Tráfico de entrada"],
+    ["icmpOutEchoReps", "icmpOut.png", "Respuestas ICMP de salida"],
+    ["tcpOutSegs", "tcpOut.png", "Paquetes TCP de salida"],
+    ["udpInOverflows", "udpIn.png", "Paquetes UDP de entrada"]
+]
 
 # Desplegar menu principal
 def menu():
     print("Sistema de Administración de Red")
-    print("Practica 1 - Adquisicion de informacion")
     print("Tovar Espejo Mariana Josefina | 4CM14 | 2019630340")
     print("*****************************************************")
+    print("Practica 1 - Adquisicion de informacion")
     print("1. Agregar dispositivo")
     print("2. Cambiar información de dispositivo")
     print("3. Eliminar dispositivo")
     print("4. Generar reporte")
-    print("5. Salir")
+    print("*****************************************************")
+    print("Practica 2 - Administracion de contabilidad")
+    print("5. Generar grafica")
+    print("6. Salir")
     opcion = int(input("Ingresa una opcion: "))
     return opcion
 
@@ -27,7 +39,7 @@ def menu():
 # Función main
 def main():
     opcion = menu()
-    while opcion != 5:
+    while opcion != 6:
         if opcion == 1:
             agregarDispositivo()
         elif opcion == 2:
@@ -36,6 +48,19 @@ def main():
             eliminarDispositivo()
         elif opcion == 4:
             generarReporte()
+        elif opcion == 5:
+            for dato in datos:
+                # Obtener el timestamp actual
+                now = int(time.time())
+                # Restar 10 minutos (600 segundos)
+                start = now - 600
+
+                grafica(
+                    os.path.join(os.getcwd(), "graficas", dato[1]),
+                    start, now, dato[2],
+                    dato[0],
+                    os.path.join(os.getcwd(), "RRD", "1.rrd"),
+                    dato[2])
         else:
             print("Opcion invalida")
         opcion = menu()
@@ -138,16 +163,18 @@ def generarReporte():
     pdf.cell(200, 10, txt="INFORMACIÓN DE INTERFACES", ln=9, align="L")
     pdf.set_font("Arial", size = 12)
     pdf.cell(200, 10, txt="Numero de interfaces: " + numeroInterfaces, ln=9, align="L")
-    if numeroInterfaces > 5:
-        for i in range(int(numeroInterfaces)):
-            descripcionInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.2.{i+1}")
-            estadoInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.7.{i+1}")
-            pdf.cell(200, 10, txt=f"Descripcion interfaz: {descripcionInterfaz} | Estado interfaz: {estadosInterfaz[int(estadoInterfaz)-1]}", ln=9, align="L")
-    else:
-        for i in range(5):
-            descripcionInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.2.{i+1}")
-            estadoInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.7.{i+1}")
-            pdf.cell(200, 10, txt=f"Descripcion interfaz: {descripcionInterfaz} | Estado interfaz: {estadosInterfaz[int(estadoInterfaz)-1]}", ln=9, align="L")
+    for i in range(int(numeroInterfaces)):
+        descripcionInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.2.{i+1}")
+        estadoInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.7.{i+1}")
+        pdf.cell(200, 10, txt=f"Descripcion interfaz: {descripcionInterfaz} | Estado interfaz: {estadosInterfaz[int(estadoInterfaz)-1]}", ln=9, align="L")
+    pdf.set_font("Arial", size = 12, style = "B")
+
+    pdf.cell(200, 10, txt="INFORMACIÓN DE CONTABILIDAD", ln=9, align="L")
+    pdf.image("graficas/ifIn.png", x = 10, y = 130, w = 100, h = 30)
+    pdf.image("graficas/ipIn.png", x = 10, y = 160, w = 100, h = 30)
+    pdf.image("graficas/icmpOut.png", x = 10, y = 190, w = 100, h = 30)
+    pdf.image("graficas/tcpOut.png", x = 10, y = 220, w = 100, h = 30)
+    pdf.image("graficas/udpIn.png", x = 10, y = 250, w = 100, h = 30)
     pdf.output("reporte.pdf")
 
 def consultaSNMP(comunidad,host,oid,position=2):
