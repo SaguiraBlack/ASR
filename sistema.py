@@ -31,7 +31,10 @@ def menu():
     print("*****************************************************")
     print("Practica 2 - Administracion de contabilidad")
     print("5. Generar grafica")
-    print("6. Salir")
+    print("*****************************************************")
+    print("Practica 3 - Administracion de rendimiento")
+    print("6. Generar grafica")
+    print("7. Salir")
     opcion = int(input("Ingresa una opcion: "))
     return opcion
 
@@ -39,7 +42,7 @@ def menu():
 # Función main
 def main():
     opcion = menu()
-    while opcion != 6:
+    while opcion != 7:
         if opcion == 1:
             agregarDispositivo()
         elif opcion == 2:
@@ -61,6 +64,8 @@ def main():
                     dato[0],
                     os.path.join(os.getcwd(), "RRD", "1.rrd"),
                     dato[2])
+        elif opcion == 6:
+            generarGraficaRendimiento()
         else:
             print("Opcion invalida")
         opcion = menu()
@@ -168,7 +173,8 @@ def generarReporte():
         estadoInterfaz = consultaSNMP(comunidad,direccion, f"1.3.6.1.2.1.2.2.1.7.{i+1}")
         pdf.cell(200, 10, txt=f"Descripcion interfaz: {descripcionInterfaz} | Estado interfaz: {estadosInterfaz[int(estadoInterfaz)-1]}", ln=9, align="L")
     pdf.set_font("Arial", size = 12, style = "B")
-
+    
+    pdf.add_page()
     pdf.cell(200, 10, txt="INFORMACIÓN DE CONTABILIDAD", ln=9, align="L")
     pdf.image("graficas/ifIn.png", x = 10, y = 130, w = 100, h = 30)
     pdf.image("graficas/ipIn.png", x = 10, y = 160, w = 100, h = 30)
@@ -196,6 +202,25 @@ def consultaSNMP(comunidad,host,oid,position=2):
             resultado= varB.split()[position]
             return resultado
 
+def generarGraficaRendimiento ():
+    datos = [
+        ["cpu", "cpu.png", "Porcentaje de uso de CPU"],
+        ["ram", "ram.png", "Porcentaje de uso de RAM"],
+        ["disk", "disk.png", "Porcentaje de uso de disco"],
+    ]
+    for dato in datos:
+        # Obtener el timestamp actual
+        now = int(time.time())
+        # Restar 10 minutos (600 segundos)
+        start = now - 600
+
+        grafica(
+            os.path.join(os.getcwd(), "graficas", dato[1]),
+            start, now, dato[2],
+            dato[0],
+            os.path.join(os.getcwd(), "p3", "rendimiento.rrd"),
+            dato[2])
+    print("Generando graficas de rendimiento...")
 
 # Inicio del programa
 main()
