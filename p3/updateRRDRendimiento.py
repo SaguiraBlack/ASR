@@ -19,19 +19,51 @@ canSendEmail = True
 mailsender = "josefina10969@gmail.com"
 mailreceip = "josefina10969@gmail.com"
 mailserver = 'smtp.gmail.com: 587'
-password = ''
+password = 'vcnrhkigbrsktfyx'
 
-async def enableEmail():
-    await asyncio.sleep(60*5)  # Espera 5 segundos
-    canSendEmail = True
-    print("El tiempo ha pasado")
+def grafica(filename, time_start, time_end, title, var, db, name):
+    if not os.path.exists(os.path.join(os.getcwd(), "graficas")):
+        os.mkdir(os.path.join(os.getcwd(), "graficas"))
+
+    try:
+        rrdtool.graph(filename, "--start", str(time_start), "--end", str(time_end),
+                      "--vertical-label=Porcentaje (%)", "--title=" + title,
+                      "--alt-y-grid",
+                      "DEF:variable=" + db + ":" + var + ":AVERAGE",
+                      "CDEF:escala=variable,8,*",
+                      "LINE3:escala#0000FF:" + name)
+        return "OK"
+    except Exception as e:
+        print(e)
+        return "Error al generar la grafica :" + e.args[0]
+    
+def generarGraficaRendimiento ():
+    datos = [
+        ["cpu", "cpu.png", "Porcentaje de uso de CPU"],
+        ["ram", "ram.png", "Porcentaje de uso de RAM"],
+        ["disk", "disk.png", "Porcentaje de uso de disco"],
+    ]
+    for dato in datos:
+        # Obtener el timestamp actual
+        now = int(time.time())
+        # Restar 10 minutos (600 segundos)
+        start = now - 600
+
+        grafica(
+            os.path.join(os.getcwd(), "graficas", dato[1]),
+            start, now, dato[2],
+            dato[0],
+            os.path.join(os.getcwd(), "p3", "rendimiento.rrd"),
+            dato[2])
+    print("Generando graficas de rendimiento...")
 
 
 def sendEmail(nombre, tipo, valor):
     global canSendEmail
     if canSendEmail:
+        generarGraficaRendimiento()
         canSendEmail = False
-        asyncio.gather(enableEmail())
+        # asyncio.gather(enableEmail())
         msg = MIMEMultipart()
         msg['Subject'] = "Alerta de rendimiento"
         msg['From'] = mailsender
@@ -51,22 +83,11 @@ def sendEmail(nombre, tipo, valor):
 
         s.sendmail(mailsender, mailreceip, msg.as_string())
         s.quit()
-
+        print("Correo Enviado")
     else:
-        print("No se puede enviar el correo")
-
-# Leer la información de dispositivos desde el archivo
-dispositivos = []
-with open(dispositivosFile, "r") as file:
-    for line in file:
-        # Eliminar el carácter de nueva línea y dividir por comas
-        dispositivo_info = line.strip().split(",")
-        # Asegurarse de que se hayan proporcionado todos los campos
-        if len(dispositivo_info) != 5:
-            raise Exception("Error: El archivo de dispositivos tiene un formato incorrecto.")
-        dispositivos.append(dispositivo_info)
-
-while 1:
+        print("Aun no se puede enviar correo")
+ 
+async def read_info():
     # Realizar consultas SNMP para cada dispositivo
     for dispositivo_info in dispositivos:
         try:
@@ -107,9 +128,43 @@ while 1:
             rrdtool.dump(rrdpath, xmlpath)
 
             print(nombre + " - " + valor)
-            time.sleep(5)
+            await asyncio.sleep(5)
 
         except Exception as e:
             if e == KeyboardInterrupt:
                 raise Exception("Se canceló la ejecución del programa...")
             print("Error: " + str(e))
+
+
+# Leer la información de dispositivos desde el archivo
+dispositivos = []
+with open(dispositivosFile, "r") as file:
+    for line in file:
+        # Eliminar el carácter de nueva línea y dividir por comas
+        dispositivo_info = line.strip().split(",")
+        # Asegurarse de que se hayan proporcionado todos los campos
+        if len(dispositivo_info) != 5:
+            raise Exception("Error: El archivo de dispositivos tiene un formato incorrecto.")
+        dispositivos.append(dispositivo_info)
+   
+async def periodic():
+    print("periodic")
+    global canSendEmail
+    await asyncio.sleep(30)  # Espera 5 minutos
+    canSendEmail = True
+    print("El tiempo ha pasado")
+    #while True:
+    #    print('periodic')
+    #    await asyncio.sleep(1)
+
+
+async def handler():
+    while True:
+        if canSendEmail:
+            asyncio.gather(
+                periodic(),
+            )
+        await read_info()
+
+
+asyncio.run(handler())

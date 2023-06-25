@@ -1,6 +1,8 @@
 import rrdtool
 import os
 
+path = os.path.join(os.getcwd(), "p3", "rendimiento.rrd")
+print(path)
 ret = rrdtool.create(os.path.join(os.getcwd(), "p3", "rendimiento.rrd"),
     "--start",'N',
     "--step",'60',

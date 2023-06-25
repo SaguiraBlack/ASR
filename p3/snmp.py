@@ -54,5 +54,5 @@ def consulta_multicast(comunidad, version, puerto, direccion):
 
 #ifInUcastPkts = consultaSNMP('comunidadSaguira', 'localhost', "1.3.6.1.2.1.2.2.1.11.1")
 #print(ifInUcastPkts)
-multicastTest = consulta_multicast('comunidadSaguira', 1, 161, 'localhost')
+multicastTest = consulta_multicast('comunidadASR', 1, 161, 'localhost')
 print(multicastTest)
