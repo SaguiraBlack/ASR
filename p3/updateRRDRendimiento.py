@@ -19,7 +19,7 @@ canSendEmail = True
 mailsender = "josefina10969@gmail.com"
 mailreceip = "josefina10969@gmail.com"
 mailserver = 'smtp.gmail.com: 587'
-password = ''
+password = 'hhsjqmzngogigntc'
 
 async def enableEmail():
     await asyncio.sleep(60*5)  # Espera 5 segundos
