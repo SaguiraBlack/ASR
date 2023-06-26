@@ -27,10 +27,13 @@ def grafica(filename, time_start, time_end, title, var, db, name):
 
     try:
         rrdtool.graph(filename, "--start", str(time_start), "--end", str(time_end),
-                      "--vertical-label=Porcentaje (%)", "--title=" + title,
+                      "--vertical-label=Porcentaje (%)", 
+                      "--lower-limit", "0", 
+                      "--upper-limit", "100",
+                      "--title=" + title,
                       "--alt-y-grid",
                       "DEF:variable=" + db + ":" + var + ":AVERAGE",
-                      "CDEF:escala=variable,8,*",
+                      "CDEF:escala=variable,1,*",
                       "LINE3:escala#0000FF:" + name)
         return "OK"
     except Exception as e:
@@ -121,7 +124,7 @@ async def read_info():
             if diskUsage > 30 or diskUsage > 50 or diskUsage > 90:
                 sendEmail(nombre, "Disco", diskUsage)
 
-            valor = "N:" + str(cargaCPU) + ":" + str(memoryUsage)+ ":" +str(diskUsage)
+            valor = "N:" + str(cargaCPU) + ":" + str(memoryUsage)+ ":" +str(int(diskUsage))
 
             # Actualizar la base de datos RRD correspondiente con el valor obtenido
             rrdtool.update(rrdpath, valor)
@@ -150,7 +153,7 @@ with open(dispositivosFile, "r") as file:
 async def periodic():
     print("periodic")
     global canSendEmail
-    await asyncio.sleep(30)  # Espera 5 minutos
+    await asyncio.sleep(60*5)  # Espera 5 minutos
     canSendEmail = True
     print("El tiempo ha pasado")
     #while True:
