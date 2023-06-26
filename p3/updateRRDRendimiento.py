@@ -17,7 +17,7 @@ canSendEmail = True
 
 # Email vars
 mailsender = "josefina10969@gmail.com"
-mailreceip = "josefina10969@gmail.com"
+mailreceip = "tanibet.escom@gmail.com"
 mailserver = 'smtp.gmail.com: 587'
 password = 'vcnrhkigbrsktfyx'
 

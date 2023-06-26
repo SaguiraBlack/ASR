@@ -1,4 +1,4 @@
-hostname b
+hostname RCPlive-3
 !
 service telnet
 service http encrypted password YWXALHMG$4ec6df8f4ea27e23a88157660f1b6dfb
@@ -32,4 +32,3 @@ interface ethernet eth3
   ip mtu 1500
   shutdown
 !
-
