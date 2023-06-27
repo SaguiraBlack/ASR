@@ -1,30 +1,36 @@
-hostname RCPlive-3
+hostname harta
 !
 service telnet
-service http encrypted password YWXALHMG$4ec6df8f4ea27e23a88157660f1b6dfb
+service http encrypted password LDWOQJID$a390d582e4e8d5412ab7bd7b5b9afaf4
 service ftp
 !
-administrator rcp encrypted password IJBJOPRF$eLvfmXU36uS9ia3euJGR30
+administrator rcp encrypted password GGTBPBRV$5yuGS0P51H/q4LxWA2hWM.
 !
 !
 !
+!
+router ospf
+  router-id 192.168.1.1
+  network 192.168.1.0/24 area 0
+  network 10.10.10.0/24 area 0
+  network 20.20.20.0/24 area 0
 !
 interface loopback lo
   ip address 127.0.0.1/8
   ip mtu 16436
 !
 interface ethernet eth0
-  ip address 192.168.1.1/24
+  ip address 10.10.10.1/24
   ip mtu 1500
   no shutdown
 !
 interface ethernet eth1
-  ip address 192.168.0.9/24
+  ip address 20.20.20.1/24
   ip mtu 1500
   no shutdown
 !
 interface ethernet eth2
-  ip address 40.40.40.1/24
+  ip address 192.168.1.1/24
   ip mtu 1500
   no shutdown
 !

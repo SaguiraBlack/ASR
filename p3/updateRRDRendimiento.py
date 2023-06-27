@@ -14,10 +14,10 @@ rrdpath = os.path.join(os.getcwd(), "p3", "rendimiento.rrd")
 xmlpath = os.path.join(os.getcwd(), "p3", "rendimiento.xml")
 imgpath = os.path.join(os.getcwd(), "graficas/")
 canSendEmail = True
-
+alertSent = False
 # Email vars
 mailsender = "josefina10969@gmail.com"
-mailreceip = "tanibet.escom@gmail.com"
+mailreceip = "josefina10969@gmail.com"
 mailserver = 'smtp.gmail.com: 587'
 password = 'vcnrhkigbrsktfyx'
 
@@ -61,17 +61,23 @@ def generarGraficaRendimiento ():
     print("Generando graficas de rendimiento...")
 
 
-def sendEmail(nombre, tipo, valor):
+def sendEmail(nombre, tipo, valor, message):
     global canSendEmail
+    global alertSent
+    messages = [
+        'primer umbral del 30%',
+        'segundo umbral de 50%',
+        'tercer umbral de 80%'
+    ]
     if canSendEmail:
         generarGraficaRendimiento()
-        canSendEmail = False
+        alertSent = True
         # asyncio.gather(enableEmail())
         msg = MIMEMultipart()
         msg['Subject'] = "Alerta de rendimiento"
         msg['From'] = mailsender
         msg['To'] = mailreceip
-        body = f'El dispositivo {nombre} ha superado el umbral de {tipo} con un valor de {valor}'
+        body = f'ATENCIÓN. El dispositivo {nombre} ha superado el {messages[message]} de {tipo} con un valor de {valor}'
         msg.attach(MIMEText(body, 'plain'))
         print(imgpath+tipo.lower()+'.png')
         fp = open(imgpath+tipo.lower()+'.png', 'rb')
@@ -91,6 +97,8 @@ def sendEmail(nombre, tipo, valor):
         print("Aun no se puede enviar correo")
  
 async def read_info():
+    global alertSent
+    global canSendEmail
     # Realizar consultas SNMP para cada dispositivo
     for dispositivo_info in dispositivos:
         try:
@@ -117,12 +125,26 @@ async def read_info():
             if cargaCPU == "" or memoryUsage == "" or diskUsage == "":
                 raise Exception("Error al hacer las consultas SNMP en el dispositivo: " + nombre)
             
-            if cargaCPU > 30 or cargaCPU > 50 or cargaCPU > 80:
-                sendEmail(nombre, "CPU", cargaCPU)
-            if memoryUsage > 30 or memoryUsage > 50 or memoryUsage > 80:
-                sendEmail(nombre, "RAM", memoryUsage)
-            if diskUsage > 30 or diskUsage > 50 or diskUsage > 90:
-                sendEmail(nombre, "Disco", diskUsage)
+            if cargaCPU > 30:
+                sendEmail(nombre, "CPU", cargaCPU, 0)
+            if cargaCPU > 50:
+                sendEmail(nombre, "CPU", cargaCPU, 1)
+            if cargaCPU > 80:
+                sendEmail(nombre, "CPU", cargaCPU, 2)    
+            if memoryUsage > 30:
+                sendEmail(nombre, "RAM", memoryUsage, 0)
+            if memoryUsage > 50:
+                sendEmail(nombre, "RAM", memoryUsage, 1)
+            if memoryUsage > 80:
+                sendEmail(nombre, "RAM", memoryUsage, 2)
+            if diskUsage > 30:
+                sendEmail(nombre, "Disco", diskUsage, 0)
+            if diskUsage > 50:
+                sendEmail(nombre, "Disco", diskUsage, 1)
+            if diskUsage > 90:
+                sendEmail(nombre, "Disco", diskUsage, 2)
+            if alertSent:
+                canSendEmail = False
 
             valor = "N:" + str(cargaCPU) + ":" + str(memoryUsage)+ ":" +str(int(diskUsage))
 
